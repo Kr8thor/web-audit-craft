@@ -4,16 +4,19 @@ import { useAuth } from '@/contexts/AuthContext'
 import { BarChart3, Zap, Clock } from 'lucide-react'
 import Button from '@/components/ui/Button'
 
-export default function UsageStats() {
-  const { userPlan } = useAuth()
+interface UsageStatsProps {
+  userProfile?: any
+  userPlan: 'free' | 'pro' | 'agency'
+}
 
+export default function UsageStats({ userProfile, userPlan }: UsageStatsProps) {
   const planLimits = {
     free: { audits: 5, used: 2 },
     pro: { audits: 100, used: 23 },
     agency: { audits: 1000, used: 156 },
   }
 
-  const currentPlan = planLimits[userPlan]
+  const currentPlan = planLimits[userPlan as keyof typeof planLimits]
   const usagePercentage = (currentPlan.used / currentPlan.audits) * 100
 
   return (
