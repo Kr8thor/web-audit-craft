@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
@@ -11,6 +10,14 @@ import RecentAudits from '@/components/audit/RecentAudits'
 import UsageStats from '@/components/dashboard/UsageStats'
 import toast from 'react-hot-toast'
 
+interface Audit {
+  id: string
+  url: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  score?: number
+  created_at: string
+}
+
 export default function Dashboard() {
   const { userPlan } = useAuth()
   const [showAuditForm, setShowAuditForm] = useState(false)
@@ -20,7 +27,7 @@ export default function Dashboard() {
     queryFn: apiClient.getUserProfile,
   })
 
-  const { data: audits = [], isLoading: loadingAudits, refetch: refetchAudits } = useQuery({
+  const { data: audits = [], isLoading: loadingAudits, refetch: refetchAudits } = useQuery<Audit[]>({
     queryKey: ['audits'],
     queryFn: apiClient.getAudits,
   })
@@ -41,9 +48,9 @@ export default function Dashboard() {
 
   const recentAudits = audits.slice(0, 5)
   const totalAudits = audits.length
-  const completedAudits = audits.filter((audit: any) => audit.status === 'completed').length
+  const completedAudits = audits.filter((audit: Audit) => audit.status === 'completed').length
   const averageScore = completedAudits > 0 
-    ? Math.round(audits.filter((audit: any) => audit.status === 'completed').reduce((sum: number, audit: any) => sum + (audit.score || 0), 0) / completedAudits)
+    ? Math.round(audits.filter((audit: Audit) => audit.status === 'completed').reduce((sum: number, audit: Audit) => sum + (audit.score || 0), 0) / completedAudits)
     : 0
 
   return (

@@ -1,48 +1,39 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 
-type Theme = 'dark' | 'light' | 'system'
-
 interface ThemeContextType {
-  theme: Theme
-  setTheme: (theme: Theme) => void
-  effectiveTheme: 'dark' | 'light'
+  theme: 'light' | 'dark'
+  toggleTheme: () => void
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('theme') as Theme) || 'system'
-    }
-    return 'system'
-  })
-
-  const [effectiveTheme, setEffectiveTheme] = useState<'dark' | 'light'>('light')
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
-    const root = window.document.documentElement
-
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      setEffectiveTheme(systemTheme)
-      root.classList.toggle('dark', systemTheme === 'dark')
-    } else {
-      setEffectiveTheme(theme)
-      root.classList.toggle('dark', theme === 'dark')
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
+    if (savedTheme) {
+      setTheme(savedTheme)
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark')
     }
+  }, [])
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  const value = {
-    theme,
-    setTheme,
-    effectiveTheme,
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light')
   }
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  )
 }
 
 export function useTheme() {
