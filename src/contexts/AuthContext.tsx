@@ -1,16 +1,17 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import type { User } from '@supabase/supabase-js'
-import toast from 'react-hot-toast'
+
+type UserPlan = 'free' | 'pro' | 'agency'
 
 interface AuthContextType {
   user: User | null
   loading: boolean
+  userPlan: UserPlan
   signIn: (email: string, password: string) => Promise<{ error?: string }>
   signUp: (email: string, password: string) => Promise<{ error?: string }>
   signOut: () => Promise<void>
-  userPlan: 'free' | 'pro' | 'agency'
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -18,70 +19,47 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userPlan, setUserPlan] = useState<UserPlan>('free')
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event: string, session: Session | null) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
 
     return () => subscription.unsubscribe()
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      return { error: error.message }
-    }
-
-    toast.success('Welcome back!')
-    return {}
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    return { error: error?.message }
   }
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
-    })
-
-    if (error) {
-      return { error: error.message }
-    }
-
-    toast.success('Account created! Please check your email to verify.')
-    return {}
+    const { error } = await supabase.auth.signUp({ email, password })
+    return { error: error?.message }
   }
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    toast.success('Signed out successfully')
   }
-
-  const userPlan = (user?.user_metadata?.plan as 'free' | 'pro' | 'agency') || 'free'
 
   const value = {
     user,
     loading,
+    userPlan,
     signIn,
     signUp,
     signOut,
-    userPlan,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

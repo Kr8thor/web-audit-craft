@@ -20,7 +20,7 @@ export default function Dashboard() {
     queryFn: apiClient.getUserProfile,
   })
 
-  const { data: audits, isLoading: loadingAudits, refetch: refetchAudits } = useQuery({
+  const { data: audits = [], isLoading: loadingAudits, refetch: refetchAudits } = useQuery({
     queryKey: ['audits'],
     queryFn: apiClient.getAudits,
   })
@@ -39,11 +39,11 @@ export default function Dashboard() {
     )
   }
 
-  const recentAudits = audits?.slice(0, 5) || []
-  const totalAudits = audits?.length || 0
-  const completedAudits = audits?.filter((audit: any) => audit.status === 'completed').length || 0
+  const recentAudits = audits.slice(0, 5)
+  const totalAudits = audits.length
+  const completedAudits = audits.filter((audit: any) => audit.status === 'completed').length
   const averageScore = completedAudits > 0 
-    ? Math.round(audits?.filter((audit: any) => audit.status === 'completed').reduce((sum: number, audit: any) => sum + (audit.score || 0), 0) / completedAudits)
+    ? Math.round(audits.filter((audit: any) => audit.status === 'completed').reduce((sum: number, audit: any) => sum + (audit.score || 0), 0) / completedAudits)
     : 0
 
   return (
