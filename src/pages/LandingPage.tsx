@@ -2,113 +2,114 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Navigate } from 'react-router-dom'
+import { CheckCircle, BarChart3, Zap, Shield } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import { ArrowRight, CheckCircle, BarChart3, Search, Globe } from 'lucide-react'
 
 export default function LandingPage() {
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />
-  }
+  const features = [
+    {
+      icon: BarChart3,
+      title: 'Comprehensive Analysis',
+      description: 'Get detailed insights into your website\'s SEO performance'
+    },
+    {
+      icon: Zap,
+      title: 'Fast Results',
+      description: 'Receive audit results in minutes, not hours'
+    },
+    {
+      icon: Shield,
+      title: 'Security First',
+      description: 'Your data is protected with enterprise-grade security'
+    }
+  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Header */}
       <header className="px-6 py-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">SA</span>
-            </div>
-            <span className="text-xl font-semibold text-slate-900 dark:text-white">
-              SEO Audit
-            </span>
+            <BarChart3 className="text-blue-600" size={32} />
+            <span className="font-bold text-2xl text-slate-900 dark:text-white">SEO Audit</span>
           </div>
-          <Link to="/auth">
-            <Button variant="outline">
-              Sign In
-            </Button>
-          </Link>
+          <div className="space-x-4">
+            {user ? (
+              <Link to="/dashboard">
+                <Button>Go to Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="outline">Sign In</Button>
+                </Link>
+                <Link to="/auth">
+                  <Button>Get Started</Button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="px-6 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold text-slate-900 dark:text-white mb-6">
-            Optimize Your Website's{' '}
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              SEO Performance
-            </span>
-          </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-400 mb-8 max-w-2xl mx-auto">
-            Get comprehensive SEO audits, actionable insights, and AI-powered recommendations 
-            to boost your website's search engine rankings.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/auth">
-              <Button size="lg" className="flex items-center space-x-2">
-                <span>Start Free Audit</span>
-                <ArrowRight size={18} />
-              </Button>
-            </Link>
+      <main className="px-6 py-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h1 className="text-5xl font-bold text-slate-900 dark:text-white mb-6">
+              Optimize Your Website's
+              <span className="text-blue-600"> SEO Performance</span>
+            </h1>
+            <p className="text-xl text-slate-600 dark:text-slate-400 mb-8 max-w-3xl mx-auto">
+              Get comprehensive SEO audits with actionable insights to improve your search rankings
+              and drive more organic traffic to your website.
+            </p>
+            {!user && (
+              <Link to="/auth">
+                <Button size="lg" className="text-lg px-8 py-4">
+                  Start Free Audit
+                </Button>
+              </Link>
+            )}
           </div>
-        </div>
-      </section>
 
-      {/* Features */}
-      <section className="px-6 py-20">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-12">
-            Everything you need to improve your SEO
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Search className="text-blue-600 dark:text-blue-400" size={24} />
+          {/* Features */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {features.map((feature, index) => (
+              <div key={index} className="glass dark:glass-dark rounded-xl p-6 text-center">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="text-blue-600 dark:text-blue-400" size={24} />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                Technical Analysis
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Deep technical SEO analysis including site speed, mobile-friendliness, and crawlability.
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="text-green-600 dark:text-green-400" size={24} />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                Performance Metrics
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Track your SEO score improvements and monitor key performance indicators.
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Globe className="text-purple-600 dark:text-purple-400" size={24} />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                AI Recommendations
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Get personalized, AI-powered recommendations to fix SEO issues.
-              </p>
-            </div>
+            ))}
+          </div>
+
+          {/* CTA Section */}
+          <div className="glass dark:glass-dark rounded-2xl p-8 text-center">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+              Ready to boost your SEO?
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
+              Join thousands of websites already improving their search rankings
+            </p>
+            {!user && (
+              <Link to="/auth">
+                <Button size="lg">
+                  Get Started Today
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
-      </section>
+      </main>
     </div>
   )
 }
