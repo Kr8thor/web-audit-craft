@@ -1,125 +1,73 @@
 
 import React, { useState } from 'react'
-import { X, Globe, AlertCircle } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { apiClient } from '@/lib/api'
 import Button from '@/components/ui/Button'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import toast from 'react-hot-toast'
+import { Globe } from 'lucide-react'
 
-interface AuditFormProps {
-  onClose: () => void
-  onAuditCreated: () => void
-}
-
-export default function AuditForm({ onClose, onAuditCreated }: AuditFormProps) {
+export default function AuditForm() {
   const [url, setUrl] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const queryClient = useQueryClient()
 
-  const validateUrl = (url: string) => {
-    try {
-      const urlObj = new URL(url)
-      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:'
-    } catch {
-      return false
-    }
-  }
+  const createAuditMutation = useMutation({
+    mutationFn: (url: string) => apiClient.createAudit(url),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['audits'] })
+      toast.success('Audit started successfully!')
+      setUrl('')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to start audit')
+    },
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-
     if (!url.trim()) {
-      setError('Please enter a URL')
+      toast.error('Please enter a valid URL')
       return
     }
-
-    const fullUrl = url.startsWith('http') ? url : `https://${url}`
     
-    if (!validateUrl(fullUrl)) {
-      setError('Please enter a valid URL')
-      return
-    }
-
-    setIsLoading(true)
-
     try {
-      await apiClient.createAudit(fullUrl)
-      onAuditCreated()
-    } catch (error: any) {
-      setError(error.message || 'Failed to create audit')
-    } finally {
-      setIsLoading(false)
+      new URL(url.startsWith('http') ? url : `https://${url}`)
+      createAuditMutation.mutate(url)
+    } catch {
+      toast.error('Please enter a valid URL')
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md animate-fade-in">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-            Start New SEO Audit
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          >
-            <X size={20} className="text-slate-500" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Website URL
-            </label>
-            <div className="relative">
-              <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="example.com or https://example.com"
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-sm">
-              <AlertCircle size={16} />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="flex space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={isLoading || !url.trim()}
-            >
-              {isLoading ? <LoadingSpinner size="sm" /> : 'Start Audit'}
-            </Button>
-          </div>
-        </form>
-
-        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>What we'll analyze:</strong> Technical SEO, on-page optimization, 
-            performance metrics, and accessibility issues.
-          </p>
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-center space-x-3">
+        <Globe className="text-blue-600 dark:text-blue-400" size={20} />
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+          Start New Audit
+        </h3>
       </div>
-    </div>
+      
+      <div className="flex space-x-3">
+        <input
+          type="text"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="Enter website URL (e.g., example.com)"
+          className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          disabled={createAuditMutation.isPending}
+        />
+        <Button
+          type="submit"
+          disabled={createAuditMutation.isPending || !url.trim()}
+          className="flex items-center space-x-2"
+        >
+          {createAuditMutation.isPending ? (
+            <LoadingSpinner size="sm" />
+          ) : (
+            <span>Start Audit</span>
+          )}
+        </Button>
+      </div>
+    </form>
   )
 }

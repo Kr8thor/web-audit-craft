@@ -1,15 +1,16 @@
 
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { formatDate, getScoreColor } from '@/lib/utils'
-import { ExternalLink, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Clock, ExternalLink } from 'lucide-react'
+import { formatDate, getScoreColor, getScoreBgColor } from '@/lib/utils'
 
 interface Audit {
   id: string
   url: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: 'pending' | 'completed' | 'failed'
   score?: number
   created_at: string
+  completed_at?: string
 }
 
 interface RecentAuditsProps {
@@ -17,12 +18,12 @@ interface RecentAuditsProps {
 }
 
 export default function RecentAudits({ audits }: RecentAuditsProps) {
+  console.log('RecentAudits rendering with:', audits.length, 'audits')
+
   if (audits.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-          <ExternalLink className="text-slate-400" size={24} />
-        </div>
+        <Clock className="mx-auto text-slate-400 dark:text-slate-500 mb-4" size={48} />
         <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
           No audits yet
         </h3>
@@ -34,46 +35,56 @@ export default function RecentAudits({ audits }: RecentAuditsProps) {
   }
 
   return (
-    <div className="space-y-3">
-      {audits.map((audit) => (
-        <div key={audit.id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center space-x-4">
-            <div className="flex-shrink-0">
-              {audit.status === 'completed' && (
-                <CheckCircle className="text-green-500" size={20} />
-              )}
-              {audit.status === 'failed' && (
-                <AlertCircle className="text-red-500" size={20} />
-              )}
-              {(audit.status === 'pending' || audit.status === 'processing') && (
-                <Clock className="text-blue-500" size={20} />
-              )}
-            </div>
-            <div>
-              <p className="font-medium text-slate-900 dark:text-white">
-                {audit.url}
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+        Recent Audits
+      </h3>
+      
+      <div className="space-y-3">
+        {audits.map((audit) => (
+          <div
+            key={audit.id}
+            className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2">
+                <ExternalLink size={16} className="text-slate-400 dark:text-slate-500" />
+                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                  {audit.url}
+                </p>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 {formatDate(audit.created_at)}
               </p>
             </div>
+            
+            <div className="flex items-center space-x-3">
+              {audit.status === 'completed' && audit.score !== undefined ? (
+                <div className={`px-2 py-1 rounded text-xs font-medium ${getScoreBgColor(audit.score)} ${getScoreColor(audit.score)}`}>
+                  {audit.score}/100
+                </div>
+              ) : (
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  audit.status === 'pending' 
+                    ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400'
+                    : 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                }`}>
+                  {audit.status}
+                </span>
+              )}
+              
+              {audit.status === 'completed' && (
+                <Link
+                  to={`/audit/${audit.id}`}
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
+                >
+                  View Results
+                </Link>
+              )}
+            </div>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {audit.status === 'completed' && audit.score && (
-              <span className={`font-bold ${getScoreColor(audit.score)}`}>
-                {audit.score}
-              </span>
-            )}
-            <Link
-              to={`/audit/${audit.id}`}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm"
-            >
-              View Details
-            </Link>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }
