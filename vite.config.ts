@@ -1,7 +1,8 @@
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { lovableTagger } from 'lovable-tagger'
+import { componentTagger } from 'lovable-tagger'
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -10,8 +11,8 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    lovableTagger(),
-  ],
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
