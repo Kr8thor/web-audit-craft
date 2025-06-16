@@ -1,133 +1,77 @@
+
 import { supabase } from './supabase'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
-// Auth API calls
-export const authAPI = {
-  async register(email: string, password: string) {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    })
-    return response.json()
+// Mock API client for demo purposes
+export const apiClient = {
+  async createAudit(url: string) {
+    // In a real app, this would call your backend API
+    console.log('Creating audit for:', url)
+    
+    // Mock audit creation
+    const mockAudit = {
+      id: Math.random().toString(36).substr(2, 9),
+      url,
+      status: 'pending' as const,
+      created_at: new Date().toISOString()
+    }
+    
+    return mockAudit
   },
 
-  async login(email: string, password: string) {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+  async getAudits() {
+    // Mock data for demo
+    return [
+      {
+        id: '1',
+        url: 'https://example.com',
+        status: 'completed' as const,
+        score: 85,
+        created_at: new Date(Date.now() - 86400000).toISOString()
       },
-      body: JSON.stringify({ email, password }),
-    })
-    return response.json()
+      {
+        id: '2',
+        url: 'https://test.com',
+        status: 'pending' as const,
+        created_at: new Date(Date.now() - 3600000).toISOString()
+      }
+    ]
   },
 
-  async logout(token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+  async getAudit(id: string) {
+    // Mock single audit data
+    return {
+      id,
+      url: 'https://example.com',
+      status: 'completed' as const,
+      score: 85,
+      results: {
+        technicalIssues: [],
+        onPageIssues: [],
+        recommendations: [],
+        metrics: {}
       },
-    })
-    return response.json()
+      created_at: new Date().toISOString(),
+      completed_at: new Date().toISOString()
+    }
   },
 
-  async getCurrentUser(token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-    return response.json()
+  async getUserProfile() {
+    // Mock user profile
+    return {
+      id: '1',
+      email: 'user@example.com',
+      plan: 'free' as const
+    }
   }
-}
-
-// Audit API calls
-export const auditAPI = {
-  async createAudit(url: string, token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/audits`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url }),
-    })
-    return response.json()
-  },
-
-  async getAudits(token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/audits`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-    return response.json()
-  },
-
-  async getAudit(id: string, token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/audits/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-    return response.json()
-  },
-
-  // Server-Sent Events for real-time progress
-  createProgressStream(auditId: string, token: string) {
-    return new EventSource(`${API_BASE_URL}/api/audits/${auditId}/progress`, {
-      withCredentials: false,
-      // Note: EventSource doesn't support custom headers, so we'll need to handle auth differently
-      // For now, we'll use query params for the token
-    })
-  }
-}
-
-// Usage API calls
-export const usageAPI = {
-  async getUsage(token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/usage`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-    return response.json()
-  }
-}
-
-// Helper function to handle API errors
-export function handleAPIError(error: any) {
-  console.error('API Error:', error)
-  
-  if (error.status === 401) {
-    // Unauthorized - redirect to login
-    window.location.href = '/auth'
-    return
-  }
-  
-  if (error.status === 429) {
-    // Rate limited
-    throw new Error('Rate limit exceeded. Please upgrade your plan or try again later.')
-  }
-  
-  if (error.message) {
-    throw new Error(error.message)
-  }
-  
-  throw new Error('An unexpected error occurred. Please try again.')
 }
 
 // Types
 export interface Audit {
   id: string
   url: string
-  status: 'processing' | 'completed' | 'failed'
+  status: 'pending' | 'processing' | 'completed' | 'failed'
   score?: number
   results?: {
     technicalIssues: string[]
@@ -142,22 +86,12 @@ export interface Audit {
     }
   }
   error?: string
-  createdAt: string
-  completedAt?: string
+  created_at: string
+  completed_at?: string
 }
 
 export interface User {
   id: string
   email: string
   plan: 'free' | 'pro' | 'agency'
-  usage?: {
-    today: number
-    limit: number
-  }
-}
-
-export interface Usage {
-  used: number
-  limit: number
-  resetDate: string
 }

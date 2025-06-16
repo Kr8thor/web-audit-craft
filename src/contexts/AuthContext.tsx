@@ -1,12 +1,14 @@
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { supabase, auth } from '@/lib/supabase'
 import { User } from '@/lib/api'
-import { toast } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 
 interface AuthContextType {
   user: User | null
   token: string | null
   loading: boolean
+  userPlan: 'free' | 'pro' | 'agency'
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -161,6 +163,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     token,
     loading,
+    userPlan: user?.plan || 'free',
     signIn,
     signUp,
     signOut,

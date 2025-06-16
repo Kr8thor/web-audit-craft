@@ -14,9 +14,9 @@ export default function UsageStats({ userProfile, userPlan }: UsageStatsProps) {
     free: { audits: 5, used: 2 },
     pro: { audits: 100, used: 23 },
     agency: { audits: 1000, used: 156 },
-  }
+  } as const
 
-  const currentPlan = planLimits[userPlan as keyof typeof planLimits]
+  const currentPlan = planLimits[userPlan]
   const usagePercentage = (currentPlan.used / currentPlan.audits) * 100
 
   return (
