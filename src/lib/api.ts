@@ -1,8 +1,4 @@
 
-import { supabase } from './supabase'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-
 // Mock API client for demo purposes
 export const apiClient = {
   async createAudit(url: string) {

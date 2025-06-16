@@ -58,7 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initializeAuth()
 
     // Listen for auth changes
-    const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = auth.onAuthStateChange(async (event: string, session: any) => {
       if (event === 'SIGNED_IN' && session) {
         setToken(session.access_token)
         setUser({
