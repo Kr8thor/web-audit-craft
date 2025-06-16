@@ -1,7 +1,7 @@
-
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { lovableTagger } from 'lovable-tagger'
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    lovableTagger(),
   ],
   resolve: {
     alias: {
