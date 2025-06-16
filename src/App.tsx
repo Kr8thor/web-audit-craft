@@ -14,6 +14,8 @@ import AuditResults from './pages/AuditResults'
 import AuditHistory from './pages/AuditHistory'
 import Settings from './pages/Settings'
 
+console.log('App component loading...')
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -24,6 +26,8 @@ const queryClient = new QueryClient({
 })
 
 function App() {
+  console.log('App component rendering...')
+  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
