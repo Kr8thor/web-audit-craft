@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { supabase, auth } from '@/lib/supabase'
+import { supabase, auth } from '@/integrations/supabase/client'
 import { User } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -35,41 +35,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for existing session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await auth.getSession()
-        
-        if (session) {
-          setToken(session.access_token)
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            plan: session.user.user_metadata?.plan || 'free'
-          })
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session)
+      setToken(session?.access_token || null)
+      setUser(session?.user ? {
+        id: session.user.id,
+        email: session.user.email!,
+        plan: session.user.user_metadata?.plan || 'free'
+      } : null)
+      setLoading(false)
+    })
 
-    initializeAuth()
-
-    // Listen for auth changes
-    const { data: { subscription } } = auth.onAuthStateChange(async (event: string, session: any) => {
-      if (event === 'SIGNED_IN' && session) {
-        setToken(session.access_token)
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          plan: session.user.user_metadata?.plan || 'free'
-        })
-      } else if (event === 'SIGNED_OUT') {
-        setToken(null)
-        setUser(null)
-      }
+    // THEN check for existing session
+    auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session)
+      setToken(session?.access_token || null)
+      setUser(session?.user ? {
+        id: session.user.id,
+        email: session.user.email!,
+        plan: session.user.user_metadata?.plan || 'free'
+      } : null)
       setLoading(false)
     })
 
@@ -79,21 +65,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true)
-      const { data, error } = await auth.signIn(email, password)
+      const { data, error } = await auth.signInWithPassword({
+        email,
+        password
+      })
       
       if (error) {
         throw new Error(error.message)
       }
 
-      if (data.session) {
-        setToken(data.session.access_token)
-        setUser({
-          id: data.user.id,
-          email: data.user.email!,
-          plan: data.user.user_metadata?.plan || 'free'
-        })
-        toast.success('Successfully signed in!')
-      }
+      toast.success('Successfully signed in!')
     } catch (error: any) {
       console.error('Sign in error:', error)
       toast.error(error.message || 'Failed to sign in')
@@ -106,7 +87,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signUp = async (email: string, password: string) => {
     try {
       setLoading(true)
-      const { data, error } = await auth.signUp(email, password)
+      const redirectUrl = `${window.location.origin}/`
+      
+      const { data, error } = await auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      })
       
       if (error) {
         throw new Error(error.message)
@@ -115,12 +104,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (data.user && !data.session) {
         toast.success('Check your email for the confirmation link!')
       } else if (data.session) {
-        setToken(data.session.access_token)
-        setUser({
-          id: data.user.id,
-          email: data.user.email!,
-          plan: 'free'
-        })
         toast.success('Account created successfully!')
       }
     } catch (error: any) {
@@ -141,8 +124,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message)
       }
 
-      setToken(null)
-      setUser(null)
       toast.success('Successfully signed out!')
     } catch (error: any) {
       console.error('Sign out error:', error)

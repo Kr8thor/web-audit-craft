@@ -1,110 +1,89 @@
 
 import React, { useState } from 'react'
-import { Navigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { BarChart3, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 export default function AuthPage() {
-  const { user, loading, signIn, signUp } = useAuth()
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />
-  }
+  const [isLoading, setIsLoading] = useState(false)
+  const { signIn, signUp } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-
-    if (isSignUp && password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
-    setIsSubmitting(true)
+    setIsLoading(true)
 
     try {
-      const { error } = isSignUp
-        ? await signUp(email, password)
-        : await signIn(email, password)
-
-      if (error) {
-        setError(error)
+      if (isLogin) {
+        await signIn(email, password)
       } else {
-        toast.success(isSignUp ? 'Account created successfully!' : 'Welcome back!')
+        await signUp(email, password)
       }
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred')
+    } catch (error: any) {
+      toast.error(error.message || 'Authentication failed')
     } finally {
-      setIsSubmitting(false)
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <div className="glass dark:glass-dark rounded-2xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-lg">SA</span>
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              {isSignUp ? 'Start optimizing your SEO today' : 'Sign in to your account'}
-            </p>
-          </div>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center space-x-2 mb-6">
+            <BarChart3 className="text-blue-600" size={32} />
+            <span className="font-bold text-2xl text-slate-900 dark:text-white">SEO Audit</span>
+          </Link>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+            {isLogin ? 'Welcome Back' : 'Create Account'}
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400">
+            {isLogin ? 'Sign in to your account' : 'Start your SEO journey today'}
+          </p>
+        </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Form */}
+        <div className="glass dark:glass-dark rounded-xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Email
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Email Address
               </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Enter your email"
-                required
-                disabled={isSubmitting}
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Password
               </label>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
                 <input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-12 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   placeholder="Enter your password"
                   required
-                  disabled={isSubmitting}
-                  minLength={6}
                 />
                 <button
                   type="button"
@@ -116,71 +95,29 @@ export default function AuthPage() {
               </div>
             </div>
 
-            {isSignUp && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Confirm your password"
-                  required
-                  disabled={isSubmitting}
-                  minLength={6}
-                />
-              </div>
-            )}
-
-            {error && (
-              <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-sm">
-                <AlertCircle size={16} />
-                <span>{error}</span>
-              </div>
-            )}
-
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting}
+              disabled={isLoading}
             >
-              {isSubmitting ? (
+              {isLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
-                isSignUp ? 'Create Account' : 'Sign In'
+                isLogin ? 'Sign In' : 'Create Account'
               )}
             </Button>
           </form>
 
-          {/* Switch mode */}
           <div className="mt-6 text-center">
             <p className="text-slate-600 dark:text-slate-400">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+              {isLogin ? "Don't have an account?" : "Already have an account?"}
               <button
-                onClick={() => {
-                  setIsSignUp(!isSignUp)
-                  setError('')
-                  setPassword('')
-                  setConfirmPassword('')
-                }}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
-                disabled={isSubmitting}
+                onClick={() => setIsLogin(!isLogin)}
+                className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
               >
-                {isSignUp ? 'Sign In' : 'Sign Up'}
+                {isLogin ? 'Sign up' : 'Sign in'}
               </button>
             </p>
-          </div>
-
-          {/* Back to home */}
-          <div className="mt-4 text-center">
-            <Link
-              to="/"
-              className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
-            >
-              ← Back to home
-            </Link>
           </div>
         </div>
       </div>

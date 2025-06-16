@@ -1,7 +1,9 @@
+
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 // Lazy load pages for better performance
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'))
@@ -15,6 +17,8 @@ const LandingPage = React.lazy(() => import('@/pages/LandingPage'))
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
 
+  console.log('ProtectedRoute - user:', user, 'loading:', loading)
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -24,6 +28,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
+    console.log('No user found, redirecting to auth')
     return <Navigate to="/auth" replace />
   }
 
@@ -51,71 +56,73 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-      <React.Suspense 
-        fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <LoadingSpinner size="lg" text="Loading application..." />
-          </div>
-        }
-      >
-        <Routes>
-          {/* Public Routes */}
-          <Route 
-            path="/" 
-            element={
-              <PublicRoute>
-                <LandingPage />
-              </PublicRoute>
-            } 
-          />
-          <Route 
-            path="/auth" 
-            element={
-              <PublicRoute>
-                <AuthPage />
-              </PublicRoute>
-            } 
-          />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        <React.Suspense 
+          fallback={
+            <div className="min-h-screen flex items-center justify-center">
+              <LoadingSpinner size="lg" text="Loading application..." />
+            </div>
+          }
+        >
+          <Routes>
+            {/* Public Routes */}
+            <Route 
+              path="/" 
+              element={
+                <PublicRoute>
+                  <LandingPage />
+                </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/auth" 
+              element={
+                <PublicRoute>
+                  <AuthPage />
+                </PublicRoute>
+              } 
+            />
 
-          {/* Protected Routes */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/audit/:id" 
-            element={
-              <ProtectedRoute>
-                <AuditResults />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/history" 
-            element={
-              <ProtectedRoute>
-                <AuditHistory />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/settings" 
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } 
-          />
+            {/* Protected Routes */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/audit/:id" 
+              element={
+                <ProtectedRoute>
+                  <AuditResults />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/history" 
+              element={
+                <ProtectedRoute>
+                  <AuditHistory />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Catch all - redirect to landing page */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </React.Suspense>
-    </div>
+            {/* Catch all - redirect to landing page */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </React.Suspense>
+      </div>
+    </ErrorBoundary>
   )
 }
